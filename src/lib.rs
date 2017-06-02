@@ -3,47 +3,19 @@ extern crate error_chain;
 
 extern crate byteorder;
 
+#[macro_use]
+extern crate unterflow_macro;
+
+#[macro_use]
+extern crate unterflow_derive;
+
+
 mod errors;
 
 use std::io::Read;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 use errors::*;
-
-macro_rules! message {
-    ($name:ident{ $($i:ident: $t:ty),*}) => (
-        #[derive(Debug, PartialEq)]
-        struct $name {
-            $($i: $t,)*
-        }
-
-        impl $name {
-            
-            pub fn new($($i: $t,)*) -> Self {
-                Self {
-                    $($i,)*
-                }
-            }
-
-        }
-
-        impl FromBytes for $name {
-
-            fn from_bytes(reader: &mut Read) -> Result<Self> {
-                Ok(Self {
-                    $($i: FromBytes::from_bytes(reader)?,)*
-                })
-            }
-        }
-    )
-}
-
-message!(Foo {
-    a: u16,
-    b: u32,
-    c: u64,
-    d: Vec<u8>
-});
 
 pub trait FromBytes: Sized {
 
@@ -88,12 +60,26 @@ impl FromBytes for String {
 impl FromBytes for Vec<u8> {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
         let length = reader.read_u16::<LittleEndian>()?;
-        println!("Lenght: {}", length);
         let mut buffer = Vec::with_capacity(length as usize);
         let mut handle = reader.take(length as u64);
         handle.read_to_end(&mut buffer)?;
         Ok(buffer)
     }
+}
+
+message!(Foo {
+    a: u16,
+    b: u32,
+    c: u64,
+    d: Vec<u8>
+});
+
+#[derive(FromBytes, Debug, PartialEq)]
+struct Bar {
+    a: u16,
+    b: u32,
+    c: u64,
+    d: Vec<u8>,
 }
 
 
@@ -105,7 +91,7 @@ mod tests {
     use std::io::Cursor;
 
     #[test]
-    fn it_works() {
+    fn test_macro() {
         let mut reader = Cursor::new(vec![12, 0, 13, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 2, 3, 4]);
         let foo = Foo::from_bytes(&mut reader).unwrap();
 
@@ -113,6 +99,17 @@ mod tests {
         assert_eq!(foo.b, 13);
         assert_eq!(foo.c, 14);
         assert_eq!(foo.d, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_derive() {
+        let mut reader = Cursor::new(vec![12, 0, 13, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 2, 3, 4]);
+        let bar = Bar::from_bytes(&mut reader).unwrap();
+
+        assert_eq!(bar.a, 12);
+        assert_eq!(bar.b, 13);
+        assert_eq!(bar.c, 14);
+        assert_eq!(bar.d, vec![1, 2, 3, 4]);
     }
 
 }
