@@ -1,6 +1,0 @@
-[package]
-name = "unterflow_macro"
-version = "0.1.0"
-authors = ["Sebastian Menski <sebastian@menski.org>"]
-
-[dependencies]

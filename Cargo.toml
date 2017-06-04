@@ -10,7 +10,3 @@ error-chain = "0.10.0"
 [dependencies.unterflow_derive]
 optional = false
 path = "unterflow_derive/"
-
-[dependencies.unterflow_macro]
-optional = false
-path = "unterflow_macro/"
