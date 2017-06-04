@@ -20,7 +20,7 @@ struct ExecuteCommandRequest {
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 struct ExecuteCommandResponse {
-    partition_id: u32,
+    partition_id: u16,
     key: u64,
     topic_name: String,
     event: Vec<u8>,
@@ -109,7 +109,7 @@ mod tests {
         cursor!(reader, "../../dumps/create-task-response");
 
         let header = MessageHeader::from_bytes(&mut reader).unwrap();
-        assert_eq!(header.block_length, 12);
+        assert_eq!(header.block_length, 10);
         assert_eq!(header.template_id, 21);
         assert_eq!(header.schema_id, 0);
         assert_eq!(header.version, 1);

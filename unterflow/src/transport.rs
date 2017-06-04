@@ -91,7 +91,7 @@ mod tests {
         cursor!(reader, "../../dumps/create-task-response");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
-        assert_eq!(header.length, 271);
+        assert_eq!(header.length, 269);
         assert_eq!(header.version, 0);
         assert_eq!(header.flags, 0);
         assert_eq!(header.type_id, FrameType::Message);
