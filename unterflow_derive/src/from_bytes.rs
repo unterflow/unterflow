@@ -35,7 +35,7 @@ fn expand_enum(ast: &DeriveInput, variants: &Vec<Variant>) -> Tokens {
     let name = &ast.ident;
 
     let ty = enum_type(ast)
-        .unwrap_or(as_ty("u8"));
+        .unwrap_or(as_ty("u8".to_string()));
 
     let variants: Vec<_> = variants.iter()
         .filter(|variant| variant.ident != "Unknown")

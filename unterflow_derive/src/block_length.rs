@@ -44,7 +44,7 @@ fn expand_struct(body: &Vec<Field>) -> Tokens {
 
 fn expand_enum(ast: &DeriveInput) -> Tokens {
     let ty = enum_type(ast)
-        .unwrap_or(as_ty("u8"));
+        .unwrap_or(as_ty("u8".to_string()));
 
     quote! {
         ::std::mem::size_of::<#ty>()

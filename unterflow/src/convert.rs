@@ -1,5 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
+use protocol::MessageHeader;
 use errors::*;
 
 pub trait FromBytes: Sized {
@@ -14,6 +15,16 @@ pub trait BlockLength {
     }
 }
 
+pub trait Message {
+    fn template_id() -> u16;
+    fn schema_id() -> u16;
+    fn version() -> u16;
+}
+
+
+pub trait ToMessageHeader {
+    fn message_header() -> MessageHeader;
+}
 
 impl FromBytes for u8 {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
