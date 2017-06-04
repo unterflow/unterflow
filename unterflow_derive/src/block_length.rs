@@ -25,7 +25,10 @@ fn expand_struct(body: &Vec<Field>) -> Tokens {
     let mut fields: Vec<_> = body.iter()
         .filter(|field| match field.ty {
             // exclude Vec and Strings from block length
-            Ty::Path(None, ref path) => !path.segments.iter().any(|seg| seg.ident == "Vec" || seg.ident == "String"),
+            Ty::Path(None, ref path) => !path.segments.iter().any(|seg| {
+                let ref ident = seg.ident;
+                ident == "Vec" || ident == "String" || ident == "Data"
+            }),
             _ => false
         }) 
         .map(|field| {

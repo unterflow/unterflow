@@ -44,21 +44,21 @@ pub enum SubscriptionType {
 #[message(template_id = "0", schema_id = "0", version = "1")]
 pub struct ErrorResponse {
     error_code: ErrorCode,
-    error_data: Vec<u8>,
-    failed_request: Vec<u8>,
+    error_data: Data,
+    failed_request: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "10", schema_id = "0", version = "1")]
 pub struct ControlMessageRequest {
     message_type: ControlMessageType,
-    data: Vec<u8>,
+    data: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "11", schema_id = "0", version = "1")]
 pub struct ControlMessageResponse {
-    data: Vec<u8>,
+    data: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
@@ -68,7 +68,7 @@ pub struct ExecuteCommandRequest {
     key: u64,
     event_type: EventType,
     topic_name: String,
-    command: Vec<u8>,
+    command: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
@@ -77,7 +77,7 @@ pub struct ExecuteCommandResponse {
     partition_id: u16,
     key: u64,
     topic_name: String,
-    event: Vec<u8>,
+    event: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
@@ -90,7 +90,7 @@ pub struct SubscribedEvent {
     subscription_type: SubscriptionType,
     event_type: EventType,
     topic_name: String,
-    event: Vec<u8>,
+    event: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
@@ -111,13 +111,13 @@ pub struct BrokerEventMetadata {
 mod tests {
 
     use super::*;
-    use transport::*;
+    use protocol::transport::*;
 
     use std::io::Cursor;
 
     macro_rules! cursor {
         ($reader:ident, $file:expr) => (
-            let data = include_bytes!($file).to_vec();
+            let data = include_bytes!(concat!("../../../dumps/", $file)).to_vec();
             let mut $reader = Cursor::new(data);
 
             FrameHeader::skip_block(&mut $reader).unwrap();
@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_request() {
-        cursor!(reader, "../../dumps/create-task-request");
+        cursor!(reader, "create-task-request");
 
         let header = MessageHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header, ExecuteCommandRequest::message_header());
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_response() {
-        cursor!(reader, "../../dumps/create-task-response");
+        cursor!(reader, "create-task-response");
 
         let header = MessageHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header, ExecuteCommandResponse::message_header());
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_request() {
-        cursor!(reader, "../../dumps/close-subscription-request");
+        cursor!(reader, "close-subscription-request");
 
         let header = MessageHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header, ControlMessageRequest::message_header());
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_response() {
-        cursor!(reader, "../../dumps/close-subscription-response");
+        cursor!(reader, "close-subscription-response");
 
         let header = MessageHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header, ControlMessageResponse::message_header());

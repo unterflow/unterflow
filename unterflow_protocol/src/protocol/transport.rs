@@ -78,7 +78,7 @@ mod tests {
 
     macro_rules! cursor {
         ($reader:ident, $file:expr) => (
-            let data = include_bytes!($file).to_vec();
+            let data = include_bytes!(concat!("../../../dumps/", $file)).to_vec();
             let mut $reader = Cursor::new(data);
         )
     }
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_request() {
-        cursor!(reader, "../../dumps/create-task-request");
+        cursor!(reader, "create-task-request");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 147);
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_response() {
-        cursor!(reader, "../../dumps/create-task-response");
+        cursor!(reader, "create-task-response");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 269);
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_request() {
-        cursor!(reader, "../../dumps/close-subscription-request");
+        cursor!(reader, "close-subscription-request");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 90);
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_response() {
-        cursor!(reader, "../../dumps/close-subscription-response");
+        cursor!(reader, "close-subscription-response");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 89);
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_channel() {
-        cursor!(reader, "../../dumps/close-channel");
+        cursor!(reader, "close-channel");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 0);
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_decode_end_of_stream() {
-        cursor!(reader, "../../dumps/end-of-stream");
+        cursor!(reader, "end-of-stream");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 0);

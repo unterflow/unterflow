@@ -1,6 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
-use transport::MessageHeader;
+use protocol::transport::MessageHeader;
 use errors::*;
 
 pub trait FromBytes: Sized {
@@ -21,9 +21,24 @@ pub trait Message {
     fn version() -> u16;
 }
 
-
 pub trait ToMessageHeader {
     fn message_header() -> MessageHeader;
+}
+
+#[derive(Debug, PartialEq, Default)]
+pub struct Data(Vec<u8>);
+
+impl ::std::ops::Deref for Data {
+    type Target = Vec<u8>;
+    fn deref(&self) -> &Vec<u8> {
+        &self.0
+    }
+}
+
+impl From<Data> for Vec<u8> {
+    fn from(data: Data) -> Self {
+        data.0
+    }
 }
 
 impl FromBytes for u8 {
@@ -74,20 +89,42 @@ impl FromBytes for i64 {
     }
 }
 
-impl FromBytes for Vec<u8> {
+impl FromBytes for Data {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
         let length = reader.read_u16::<LittleEndian>()?;
         let mut buffer = Vec::with_capacity(length as usize);
         let mut handle = reader.take(length as u64);
         handle.read_to_end(&mut buffer)?;
-        Ok(buffer)
+        Ok(Data(buffer))
     }
 }
 
 impl FromBytes for String {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
-        let buffer: Vec<u8> = FromBytes::from_bytes(reader)?;
-        Ok(String::from_utf8(buffer)?)
+        let buffer: Data = FromBytes::from_bytes(reader)?;
+        Ok(String::from_utf8(buffer.to_vec())?)
+    }
+}
+
+impl<T: FromBytes> FromBytes for Vec<T> {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        let _block_length = reader.read_u16::<LittleEndian>()?;
+        let num_in_group = reader.read_u8()?;
+        let mut group: Vec<T> = Vec::with_capacity(num_in_group as usize);
+        for _ in 0..num_in_group {
+            group.push(T::from_bytes(reader)?);
+        }
+        Ok(group)
+    }
+}
+
+impl FromBytes for bool {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        match reader.read_u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            x => bail!("Invalid boolean encoded as {:?}", x),
+        }
     }
 }
 
@@ -110,6 +147,7 @@ impl_block_length!(u32);
 impl_block_length!(i32);
 impl_block_length!(u64);
 impl_block_length!(i64);
+impl_block_length!(bool);
 
 
 #[cfg(test)]
@@ -125,18 +163,20 @@ mod tests {
             a: u8,
             b: u16,
             c: u32,
-            d: Vec<u8>,
-            e: String,
+            d: bool,
+            e: Data,
+            f: String,
         }
 
-        let mut bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 3, 0, 8, 9, 10, 4, 0, 97, 98, 99, 100];
+        let mut bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 1, 3, 0, 8, 9, 10, 4, 0, 97, 98, 99, 100];
         let foo = Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(foo.a, 1);
         assert_eq!(foo.b, 770);
         assert_eq!(foo.c, 117835012);
-        assert_eq!(foo.d, vec![8, 9, 10]);
-        assert_eq!(foo.e, "abcd");
+        assert_eq!(foo.d, true);
+        assert_eq!(foo.e, Data(vec![8, 9, 10]));
+        assert_eq!(foo.f, "abcd");
     }
 
     #[test]
@@ -216,6 +256,44 @@ mod tests {
     }
 
     #[test]
+    fn test_derive_from_bytes_group_encoding() {
+        #[derive(Debug, PartialEq, FromBytes)]
+        struct Foo {
+            foo: u16,
+            bar: Vec<Bar>,
+            baz: Data,
+        }
+
+        #[derive(Debug, PartialEq, FromBytes)]
+        struct Bar {
+            bar: u16,
+            baz: String,
+        }
+
+        let mut bytes: &[u8] = &[12, 0, 2, 0, 3, 1, 0, 3, 0, 102, 111, 111, 2, 0, 3, 0, 98, 97, 114, 3, 0, 3, 0, 98, 97, 122, 3, 0, 1, 2,
+                                 3];
+        let foo = Foo::from_bytes(&mut bytes).unwrap();
+
+        assert_eq!(foo,
+                   Foo {
+                       foo: 12,
+                       bar: vec![Bar {
+                                     bar: 1,
+                                     baz: "foo".to_string(),
+                                 },
+                                 Bar {
+                                     bar: 2,
+                                     baz: "bar".to_string(),
+                                 },
+                                 Bar {
+                                     bar: 3,
+                                     baz: "baz".to_string(),
+                                 }],
+                       baz: Data(vec![1, 2, 3]),
+                   });
+    }
+
+    #[test]
     fn test_derive_enum_default() {
         #[derive(Debug, PartialEq, EnumDefault)]
         enum Foo {
@@ -245,8 +323,13 @@ mod tests {
         struct Foo {
             a: u8,
             b: u64,
-            c: Vec<u8>,
-            d: String,
+            c: Vec<Bar>,
+            d: Data,
+            e: String,
+        }
+
+        struct Bar {
+            a: u16,
         }
 
         assert_eq!(Foo::block_length(), 9);
@@ -305,6 +388,5 @@ mod tests {
         assert_eq!(Foo::block_length(), 12);
 
     }
-
 
 }

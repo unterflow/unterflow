@@ -8,5 +8,4 @@ extern crate unterflow_derive;
 
 mod errors;
 mod convert;
-mod transport;
 mod protocol;
