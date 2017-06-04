@@ -7,7 +7,7 @@ pub trait FromBytes: Sized {
 }
 
 pub trait BlockLength {
-    fn block_length() -> usize;
+    fn block_length() -> u16;
     fn skip_block(buffer: &mut Seek) -> Result<u64> {
         let length = Self::block_length();
         Ok(buffer.seek(SeekFrom::Current(length as i64))?)
@@ -61,8 +61,8 @@ impl FromBytes for String {
 macro_rules! block_length {
     ($t:ty) => (
         impl BlockLength for $t {
-            fn block_length() -> usize {
-                ::std::mem::size_of::<$t>()
+            fn block_length() -> u16 {
+                ::std::mem::size_of::<$t>() as u16
             }
         }
     )

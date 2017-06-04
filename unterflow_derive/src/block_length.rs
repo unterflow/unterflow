@@ -13,8 +13,8 @@ pub fn expand(ast: &DeriveInput) -> Tokens {
 
     quote! {
         impl BlockLength for #name {
-            fn block_length() -> usize {
-                #block_length
+            fn block_length() -> u16 {
+                #block_length as u16
             }
         }
     }
