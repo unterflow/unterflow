@@ -23,7 +23,7 @@ fn expand_struct(ast: &DeriveInput, body: &Vec<Field>) -> Tokens {
         impl #impl_generics FromBytes for #name #ty_generics #where_clause {
             // allow empty implementations, i.e. SingleMessageHeader
             #[allow(unused_variables)]
-            fn from_bytes(reader: &mut ::std::io::Read) -> errors::Result<Self> {
+            fn from_bytes(reader: &mut ::std::io::Read) -> Result<Self> {
                 Ok(#name { #(#fields),* })
             }
         }
@@ -50,7 +50,7 @@ fn expand_enum(ast: &DeriveInput, variants: &Vec<Variant>) -> Tokens {
 
     quote! {
         impl FromBytes for #name {
-            fn from_bytes(reader: &mut ::std::io::Read) -> errors::Result<Self> {
+            fn from_bytes(reader: &mut ::std::io::Read) -> Result<Self> {
                 let value = u8::from_bytes(reader)?;
 
                 let value = match value {

@@ -1,5 +1,5 @@
 use convert::*;
-use errors;
+use errors::*;
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct FrameHeader {
