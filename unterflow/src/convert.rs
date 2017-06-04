@@ -1,6 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
-use protocol::MessageHeader;
+use transport::MessageHeader;
 use errors::*;
 
 pub trait FromBytes: Sized {

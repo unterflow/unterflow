@@ -1,31 +1,6 @@
 use convert::*;
 use errors::*;
 
-#[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
-pub struct MessageHeader {
-    block_length: u16,
-    template_id: u16,
-    schema_id: u16,
-    version: u16,
-}
-
-impl<'a, T: Message + BlockLength> From<&'a T> for MessageHeader {
-    fn from(_: &'a T) -> Self {
-        T::message_header()
-    }
-}
-
-impl<T: Message + BlockLength> ToMessageHeader for T {
-    fn message_header() -> MessageHeader {
-        MessageHeader {
-            block_length: T::block_length(),
-            template_id: T::template_id(),
-            schema_id: T::schema_id(),
-            version: T::version(),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "20", schema_id = "0", version = "1")]
 pub struct ExecuteCommandRequest {

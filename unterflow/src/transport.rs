@@ -44,6 +44,31 @@ pub struct RequestResponseHeader {
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct SingleMessageHeader {}
 
+#[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
+pub struct MessageHeader {
+    block_length: u16,
+    template_id: u16,
+    schema_id: u16,
+    version: u16,
+}
+
+impl<'a, T: Message + BlockLength> From<&'a T> for MessageHeader {
+    fn from(_: &'a T) -> Self {
+        T::message_header()
+    }
+}
+
+impl<T: Message + BlockLength> ToMessageHeader for T {
+    fn message_header() -> MessageHeader {
+        MessageHeader {
+            block_length: T::block_length(),
+            template_id: T::template_id(),
+            schema_id: T::schema_id(),
+            version: T::version(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
