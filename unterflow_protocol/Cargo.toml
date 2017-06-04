@@ -1,6 +1,6 @@
 [package]
 authors = ["Sebastian Menski <sebastian@menski.org>"]
-name = "unterflow"
+name = "unterflow_protocol"
 version = "0.1.0"
 
 [dependencies]
