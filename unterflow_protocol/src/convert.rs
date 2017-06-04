@@ -32,9 +32,21 @@ impl FromBytes for u8 {
     }
 }
 
+impl FromBytes for i8 {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        Ok(reader.read_i8()?)
+    }
+}
+
 impl FromBytes for u16 {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
         Ok(reader.read_u16::<LittleEndian>()?)
+    }
+}
+
+impl FromBytes for i16 {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        Ok(reader.read_i16::<LittleEndian>()?)
     }
 }
 
@@ -44,10 +56,21 @@ impl FromBytes for u32 {
     }
 }
 
+impl FromBytes for i32 {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        Ok(reader.read_i32::<LittleEndian>()?)
+    }
+}
 
 impl FromBytes for u64 {
     fn from_bytes(reader: &mut Read) -> Result<Self> {
         Ok(reader.read_u64::<LittleEndian>()?)
+    }
+}
+
+impl FromBytes for i64 {
+    fn from_bytes(reader: &mut Read) -> Result<Self> {
+        Ok(reader.read_i64::<LittleEndian>()?)
     }
 }
 
@@ -69,7 +92,7 @@ impl FromBytes for String {
 }
 
 
-macro_rules! block_length {
+macro_rules! impl_block_length {
     ($t:ty) => (
         impl BlockLength for $t {
             fn block_length() -> u16 {
@@ -79,10 +102,14 @@ macro_rules! block_length {
     )
 }
 
-block_length!(u8);
-block_length!(u16);
-block_length!(u32);
-block_length!(u64);
+impl_block_length!(u8);
+impl_block_length!(i8);
+impl_block_length!(u16);
+impl_block_length!(i16);
+impl_block_length!(u32);
+impl_block_length!(i32);
+impl_block_length!(u64);
+impl_block_length!(i64);
 
 
 #[cfg(test)]

@@ -1,6 +1,66 @@
 use convert::*;
 use errors::*;
 
+#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
+pub enum ErrorCode {
+    MessageNotSupported,
+    TopicNotFound,
+    RequestWriteFailure,
+    InvalidClientVersion,
+    RequestTimeout,
+    RequestProcessingFailure,
+    Unknown,
+}
+#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
+pub enum EventType {
+    TaskEvent,
+    RaftEvent,
+    SubscriptionEvent,
+    SubscriberEvent,
+    DeploymentEvent,
+    WorkflowEvent,
+    IncidentEvent,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
+pub enum ControlMessageType {
+    AddTaskSubscription,
+    RemoveTaskSubscription,
+    IncreaseTaskSubscriptionCredits,
+    RemoveTopicSubscription,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
+pub enum SubscriptionType {
+    TaskSubscription,
+    TopicSubscription,
+    Unknown,
+}
+
+
+#[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
+#[message(template_id = "0", schema_id = "0", version = "1")]
+pub struct ErrorResponse {
+    error_code: ErrorCode,
+    error_data: Vec<u8>,
+    failed_request: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
+#[message(template_id = "10", schema_id = "0", version = "1")]
+pub struct ControlMessageRequest {
+    message_type: ControlMessageType,
+    data: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
+#[message(template_id = "11", schema_id = "0", version = "1")]
+pub struct ControlMessageResponse {
+    data: Vec<u8>,
+}
+
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "20", schema_id = "0", version = "1")]
 pub struct ExecuteCommandRequest {
@@ -21,38 +81,29 @@ pub struct ExecuteCommandResponse {
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
-#[message(template_id = "10", schema_id = "0", version = "1")]
-pub struct ControlMessageRequest {
-    message_type: ControlMessageType,
-    data: Vec<u8>,
+#[message(template_id = "30", schema_id = "0", version = "1")]
+pub struct SubscribedEvent {
+    partition_id: u16,
+    position: u64,
+    key: u64,
+    subscriber_key: u64,
+    subscription_type: SubscriptionType,
+    event_type: EventType,
+    topic_name: String,
+    event: Vec<u8>,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
-#[message(template_id = "11", schema_id = "0", version = "1")]
-pub struct ControlMessageResponse {
-    data: Vec<u8>,
-}
-
-
-#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
-pub enum EventType {
-    Task,
-    Raft,
-    Subscription,
-    Subscriber,
-    Deployment,
-    Workflow,
-    Incident,
-    Unknown,
-}
-
-#[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
-pub enum ControlMessageType {
-    AddTaskSubscription,
-    RemoveTaskSubscription,
-    IncreaseTaskSubscriptionCredits,
-    RemoveTopicSubscription,
-    Unknown,
+#[message(template_id = "200", schema_id = "0", version = "1")]
+pub struct BrokerEventMetadata {
+    req_channel_id: i32,
+    req_connection_id: u64,
+    req_request_id: u64,
+    raft_term_id: i32,
+    subscription_id: u64,
+    protocol_version: u16,
+    event_type: EventType,
+    incident_key: u64,
 }
 
 
@@ -93,7 +144,7 @@ mod tests {
         assert_eq!(header, MessageHeader::from(&request));
         assert_eq!(request.partition_id, 0);
         assert_eq!(request.key, ::std::u64::MAX);
-        assert_eq!(request.event_type, EventType::Task);
+        assert_eq!(request.event_type, EventType::TaskEvent);
         assert_eq!(request.topic_name, "default-topic");
         assert_eq!(request.command.len(), 75);
     }
