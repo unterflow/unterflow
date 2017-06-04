@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_request() {
-        cursor!(reader, "../dumps/create-task-request");
+        cursor!(reader, "../../dumps/create-task-request");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 147);
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_response() {
-        cursor!(reader, "../dumps/create-task-response");
+        cursor!(reader, "../../dumps/create-task-response");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 271);
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_request() {
-        cursor!(reader, "../dumps/close-subscription-request");
+        cursor!(reader, "../../dumps/close-subscription-request");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 90);
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_subscription_response() {
-        cursor!(reader, "../dumps/close-subscription-response");
+        cursor!(reader, "../../dumps/close-subscription-response");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 89);
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_decode_close_channel() {
-        cursor!(reader, "../dumps/close-channel");
+        cursor!(reader, "../../dumps/close-channel");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 0);
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn test_decode_end_of_stream() {
-        cursor!(reader, "../dumps/end-of-stream");
+        cursor!(reader, "../../dumps/end-of-stream");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.length, 0);

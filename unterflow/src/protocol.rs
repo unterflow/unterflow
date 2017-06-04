@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_decode_create_task_request() {
-        cursor!(reader, "../dumps/create-task-request");
+        cursor!(reader, "../../dumps/create-task-request");
 
         FrameHeader::from_bytes(&mut reader).unwrap();
         TransportHeader::from_bytes(&mut reader).unwrap();

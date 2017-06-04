@@ -1,0 +1,12 @@
+[package]
+authors = ["Sebastian Menski <sebastian@menski.org>"]
+name = "unterflow"
+version = "0.1.0"
+
+[dependencies]
+byteorder = "1.0.0"
+error-chain = "0.10.0"
+
+[dependencies.unterflow_derive]
+optional = false
+path = "../unterflow_derive/"
