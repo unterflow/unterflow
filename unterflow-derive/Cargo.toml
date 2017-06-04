@@ -1,6 +1,6 @@
 [package]
 authors = ["Sebastian Menski <sebastian@menski.org>"]
-name = "unterflow_derive"
+name = "unterflow-derive"
 version = "0.1.0"
 
 [lib]
