@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
 use errors::*;
 
@@ -8,6 +8,10 @@ pub trait FromBytes: Sized {
 
 pub trait BlockLength {
     fn block_length() -> usize;
+    fn skip_block(buffer: &mut Seek) -> Result<u64> {
+        let length = Self::block_length();
+        Ok(buffer.seek(SeekFrom::Current(length as i64))?)
+    }
 }
 
 
