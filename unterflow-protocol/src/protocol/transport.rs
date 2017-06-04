@@ -3,11 +3,11 @@ use errors::*;
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct FrameHeader {
-    length: u32,
-    version: u8,
-    flags: u8,
-    type_id: FrameType,
-    stream_id: u32,
+    pub length: u32,
+    pub version: u8,
+    pub flags: u8,
+    pub type_id: FrameType,
+    pub stream_id: u32,
 }
 
 #[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
@@ -24,12 +24,12 @@ pub enum FrameType {
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct TransportHeader {
-    protocol_id: TransportProtocol,
+    pub protocol_id: TransportProtocol,
 }
 
 #[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]
 #[enum_type = "u16"]
-enum TransportProtocol {
+pub enum TransportProtocol {
     RequestResponse,
     FullDuplexSingleMessage,
     Unknown,
@@ -37,8 +37,8 @@ enum TransportProtocol {
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct RequestResponseHeader {
-    connection_id: u64,
-    request_id: u64,
+    pub connection_id: u64,
+    pub request_id: u64,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
@@ -46,10 +46,10 @@ pub struct SingleMessageHeader {}
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct MessageHeader {
-    block_length: u16,
-    template_id: u16,
-    schema_id: u16,
-    version: u16,
+    pub block_length: u16,
+    pub template_id: u16,
+    pub schema_id: u16,
+    pub version: u16,
 }
 
 impl<'a, T: Message + BlockLength> From<&'a T> for MessageHeader {
@@ -68,6 +68,7 @@ impl<T: Message + BlockLength> ToMessageHeader for T {
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {

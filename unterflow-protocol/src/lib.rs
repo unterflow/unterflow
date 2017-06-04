@@ -6,6 +6,6 @@ extern crate byteorder;
 #[macro_use]
 extern crate unterflow_derive;
 
-mod errors;
-mod convert;
-mod protocol;
+pub mod errors;
+pub mod convert;
+pub mod protocol;

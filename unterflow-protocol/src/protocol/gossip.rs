@@ -28,51 +28,51 @@ pub enum RaftMembershipState {
 }
 
 
-#[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
-#[message(template_id = "0", schema_id = "3", version = "1")]
-pub struct Gossip {
-    peers: Vec<Peer>,
-}
-
 #[derive(Debug, PartialEq, Default, FromBytes)]
 pub struct Peer {
-    state: PeerState,
-    generation: u64,
-    version: u64,
-    endpoints: Vec<Endpoint>,
-    raf_memberships: Vec<RaftMembership>,
+    pub state: PeerState,
+    pub generation: u64,
+    pub version: u64,
+    pub endpoints: Vec<Endpoint>,
+    pub raf_memberships: Vec<RaftMembership>,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes)]
 pub struct Endpoint {
-    endpoint_type: EndpointType,
-    port: u16,
-    host: String,
+    pub endpoint_type: EndpointType,
+    pub port: u16,
+    pub host: String,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes)]
 pub struct RaftMembership {
-    partition_id: u16,
-    term: u16,
-    state: RaftMembershipState,
-    topic_name: String,
+    pub partition_id: u16,
+    pub term: u16,
+    pub state: RaftMembershipState,
+    pub topic_name: String,
+}
+
+
+#[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
+#[message(template_id = "0", schema_id = "3", version = "1")]
+pub struct Gossip {
+    pub peers: Vec<Peer>,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "1", schema_id = "3", version = "1")]
 pub struct Probe {
-    port: u16,
-    host: String,
+    pub port: u16,
+    pub host: String,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "100", schema_id = "3", version = "1")]
 pub struct PeerDescriptor {
-    state: PeerState,
-    generation: u64,
-    version: u16,
-    change_state_time: u64,
-    endpoints: Vec<Endpoint>,
-    raft_memberships: Vec<RaftMembership>,
+    pub state: PeerState,
+    pub generation: u64,
+    pub version: u16,
+    pub change_state_time: u64,
+    pub endpoints: Vec<Endpoint>,
+    pub raft_memberships: Vec<RaftMembership>,
 }
-

@@ -43,67 +43,67 @@ pub enum SubscriptionType {
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "0", schema_id = "0", version = "1")]
 pub struct ErrorResponse {
-    error_code: ErrorCode,
-    error_data: Data,
-    failed_request: Data,
+    pub error_code: ErrorCode,
+    pub error_data: Data,
+    pub failed_request: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "10", schema_id = "0", version = "1")]
 pub struct ControlMessageRequest {
-    message_type: ControlMessageType,
-    data: Data,
+    pub message_type: ControlMessageType,
+    pub data: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "11", schema_id = "0", version = "1")]
 pub struct ControlMessageResponse {
-    data: Data,
+    pub data: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "20", schema_id = "0", version = "1")]
 pub struct ExecuteCommandRequest {
-    partition_id: u16,
-    key: u64,
-    event_type: EventType,
-    topic_name: String,
-    command: Data,
+    pub partition_id: u16,
+    pub key: u64,
+    pub event_type: EventType,
+    pub topic_name: String,
+    pub command: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "21", schema_id = "0", version = "1")]
 pub struct ExecuteCommandResponse {
-    partition_id: u16,
-    key: u64,
-    topic_name: String,
-    event: Data,
+    pub partition_id: u16,
+    pub key: u64,
+    pub topic_name: String,
+    pub event: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "30", schema_id = "0", version = "1")]
 pub struct SubscribedEvent {
-    partition_id: u16,
-    position: u64,
-    key: u64,
-    subscriber_key: u64,
-    subscription_type: SubscriptionType,
-    event_type: EventType,
-    topic_name: String,
-    event: Data,
+    pub partition_id: u16,
+    pub position: u64,
+    pub key: u64,
+    pub subscriber_key: u64,
+    pub subscription_type: SubscriptionType,
+    pub event_type: EventType,
+    pub topic_name: String,
+    pub event: Data,
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
 #[message(template_id = "200", schema_id = "0", version = "1")]
 pub struct BrokerEventMetadata {
-    req_channel_id: i32,
-    req_connection_id: u64,
-    req_request_id: u64,
-    raft_term_id: i32,
-    subscription_id: u64,
-    protocol_version: u16,
-    event_type: EventType,
-    incident_key: u64,
+    pub req_channel_id: i32,
+    pub req_connection_id: u64,
+    pub req_request_id: u64,
+    pub raft_term_id: i32,
+    pub subscription_id: u64,
+    pub protocol_version: u16,
+    pub event_type: EventType,
+    pub incident_key: u64,
 }
 
 
