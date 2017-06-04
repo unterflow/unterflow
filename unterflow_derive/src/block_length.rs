@@ -1,25 +1,15 @@
 use quote::Tokens;
-use syn::{DeriveInput, Field, VariantData, Body, MetaItem, Lit, Ty};
+use syn::{DeriveInput, Field, VariantData, Body, Ty};
+use util::{enum_type, as_ty};
 
 pub fn expand(ast: &DeriveInput) -> Tokens {
     let name = &ast.ident;
 
-    let block_length = ast.attrs.iter()
-        .filter_map(|attr|
-            match attr.value {
-                MetaItem::NameValue(ref ident, Lit::Str(ref value, _)) if ident == "block_length" => value.parse::<usize>().ok(),
-                _ => None
-            }
-        )
-        .map(|value| quote! { #value })
-        .next()
-        .unwrap_or(
-            match ast.body {
-                Body::Struct(VariantData::Struct(ref body)) => expand_struct(body),
-                Body::Enum(_) => expand_enum(),
-                _ => panic!("#[derive(BlockLength)] can only be used with structs or enums or has to be specified with #[block_length] attribute"),
-            }
-        );
+    let block_length = match ast.body {
+        Body::Struct(VariantData::Struct(ref body)) => expand_struct(body),
+        Body::Enum(_) => expand_enum(ast),
+        _ => panic!("#[derive(BlockLength)] can only be used with structs or enums"),
+    };
 
     quote! {
         impl BlockLength for #name {
@@ -52,8 +42,11 @@ fn expand_struct(body: &Vec<Field>) -> Tokens {
     }
 }
 
-fn expand_enum() -> Tokens {
+fn expand_enum(ast: &DeriveInput) -> Tokens {
+    let ty = enum_type(ast)
+        .unwrap_or(as_ty("u8"));
+
     quote! {
-        ::std::mem::size_of::<u8>()
+        ::std::mem::size_of::<#ty>()
     }
 }

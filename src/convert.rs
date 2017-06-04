@@ -119,6 +119,24 @@ mod tests {
     }
 
     #[test]
+    fn test_derive_from_bytes_enum_type() {
+        #[derive(Debug, PartialEq, FromBytes)]
+        #[enum_type = "u32"]
+        enum Foo {
+            A,
+            B = 16909060,
+            Unknown,
+        }
+
+        let mut bytes: &[u8] = &[0, 0, 0, 0, 4, 3, 2, 1, 1, 0, 0, 0];
+        let mut next = || Foo::from_bytes(&mut bytes).unwrap();
+
+        assert_eq!(next(), Foo::A);
+        assert_eq!(next(), Foo::B);
+        assert_eq!(next(), Foo::Unknown);
+    }
+
+    #[test]
     fn test_derive_from_bytes_nested() {
         #[derive(Debug, PartialEq, FromBytes)]
         struct Foo {
@@ -172,7 +190,11 @@ mod tests {
             b: Foo,
         }
 
-        assert_eq!(Bar::default(), Bar { a: 0, b: Foo::Unknown});
+        assert_eq!(Bar::default(),
+                   Bar {
+                       a: 0,
+                       b: Foo::Unknown,
+                   });
     }
 
     #[test]
@@ -194,32 +216,24 @@ mod tests {
         enum Foo {
             A,
             B,
-            Unknown
+            Unknown,
         }
 
         assert_eq!(Foo::block_length(), 1);
     }
 
     #[test]
-    fn test_derive_block_length_explicit() {
-        #[derive(BlockLength)]
-        #[block_length = "2"]
-        struct Foo {
-            a: u16,
-            b: u64,
-        }
-
-        #[derive(BlockLength)]
-        #[block_length = "2"]
+    fn test_derive_block_length_enum_type() {
+        #[derive(FromBytes, BlockLength)]
+        #[enum_type = "u64"]
         enum Bar {
             A,
             B,
-            Unknown
+            Unknown,
         }
 
 
-        assert_eq!(Foo::block_length(), 2);
-        assert_eq!(Foo::block_length(), 2);
+        assert_eq!(Bar::block_length(), 8);
     }
 
 
@@ -233,7 +247,7 @@ mod tests {
         }
 
         #[derive(Debug, PartialEq, BlockLength)]
-        #[block_length = "4"]
+        #[enum_type = "u32"]
         enum Bar {
             A,
             B,

@@ -1,5 +1,6 @@
 use quote::Tokens;
 use syn::{DeriveInput, Field, Variant, VariantData, Body, ConstExpr, Lit};
+use util::{as_ty, enum_type};
 
 pub fn expand(ast: &DeriveInput) -> Tokens {
     match ast.body {
@@ -33,13 +34,16 @@ fn expand_struct(ast: &DeriveInput, body: &Vec<Field>) -> Tokens {
 fn expand_enum(ast: &DeriveInput, variants: &Vec<Variant>) -> Tokens {
     let name = &ast.ident;
 
+    let ty = enum_type(ast)
+        .unwrap_or(as_ty("u8"));
+
     let variants: Vec<_> = variants.iter()
         .filter(|variant| variant.ident != "Unknown")
         .enumerate()
         .map(|(idx, variant)| {
             let value = match variant.discriminant {
-                Some(ConstExpr::Lit(Lit::Int(value, _))) => value as u8,
-                _ => idx as u8
+                Some(ConstExpr::Lit(Lit::Int(value, _))) => value,
+                _ => idx as u64
             };
 
             let unqualified_ident = &variant.ident;
@@ -51,9 +55,9 @@ fn expand_enum(ast: &DeriveInput, variants: &Vec<Variant>) -> Tokens {
     quote! {
         impl FromBytes for #name {
             fn from_bytes(reader: &mut ::std::io::Read) -> Result<Self> {
-                let value = u8::from_bytes(reader)?;
+                let value = #ty::from_bytes(reader)?;
 
-                let value = match value {
+                let value = match value as u64 {
                 #(#variants),*,
                 _ => #name::Unknown
                 };

@@ -8,8 +8,9 @@ use proc_macro::TokenStream;
 mod from_bytes;
 mod enum_default;
 mod block_length;
+mod util;
 
-#[proc_macro_derive(FromBytes)]
+#[proc_macro_derive(FromBytes, attributes(enum_type))]
 pub fn derive_from_bytes(input: TokenStream) -> TokenStream {
     let source = input.to_string();
     let ast = syn::parse_derive_input(&source).unwrap();
@@ -25,7 +26,7 @@ pub fn derive_enum_default(input: TokenStream) -> TokenStream {
     expanded.parse().unwrap()
 }
 
-#[proc_macro_derive(BlockLength, attributes(block_length))]
+#[proc_macro_derive(BlockLength, attributes(enum_type))]
 pub fn derive_block_length(input: TokenStream) -> TokenStream {
     let source = input.to_string();
     let ast = syn::parse_derive_input(&source).unwrap();
