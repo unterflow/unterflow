@@ -1,5 +1,7 @@
-use std::io::{Read, Seek, SeekFrom};
+use std::fmt;
+use std::io::{Cursor, Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
+use rmpv::decode::read_value;
 use protocol::transport::MessageHeader;
 use errors::*;
 
@@ -25,7 +27,7 @@ pub trait ToMessageHeader {
     fn message_header() -> MessageHeader;
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(PartialEq, Default)]
 pub struct Data(Vec<u8>);
 
 impl ::std::ops::Deref for Data {
@@ -38,6 +40,23 @@ impl ::std::ops::Deref for Data {
 impl From<Data> for Vec<u8> {
     fn from(data: Data) -> Self {
         data.0
+    }
+}
+
+impl fmt::Debug for Data {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut reader = Cursor::new(&self.0);
+        if let Ok(value) = read_value(&mut reader) {
+            // assume all message pack data has to be a map
+            // to distinguish non message pack data which still
+            // can be parsed somehow
+            if value.is_map() {
+                return write!(f, "{}", value);
+            }
+        }
+
+        // default debug output
+        write!(f, "Data({:?})", self.0)
     }
 }
 

@@ -6,6 +6,7 @@ version = "0.1.0"
 [dependencies]
 byteorder = "1.0.0"
 error-chain = "0.10.0"
+rmpv = "0.4.0"
 
 [dependencies.unterflow-derive]
 optional = false
