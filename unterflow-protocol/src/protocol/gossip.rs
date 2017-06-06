@@ -32,7 +32,7 @@ pub enum RaftMembershipState {
 pub struct Peer {
     pub state: PeerState,
     pub generation: u64,
-    pub version: u64,
+    pub version: u16,
     pub endpoints: Vec<Endpoint>,
     pub raf_memberships: Vec<RaftMembership>,
 }
@@ -75,4 +75,90 @@ pub struct PeerDescriptor {
     pub change_state_time: u64,
     pub endpoints: Vec<Endpoint>,
     pub raft_memberships: Vec<RaftMembership>,
+}
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use protocol::transport::*;
+
+    use std::io::Cursor;
+
+    macro_rules! cursor {
+        ($reader:ident, $file:expr) => (
+            let data = include_bytes!(concat!("../../../dumps/", $file)).to_vec();
+            let mut $reader = Cursor::new(data);
+
+            FrameHeader::skip_block(&mut $reader).unwrap();
+            TransportHeader::skip_block(&mut $reader).unwrap();
+            RequestResponseHeader::skip_block(&mut $reader).unwrap();
+        )
+    }
+
+    #[test]
+    fn test_decode_gossip() {
+        cursor!(reader, "gossip");
+
+        let header = MessageHeader::from_bytes(&mut reader).unwrap();
+        assert_eq!(header, Gossip::message_header());
+
+        let request = Gossip::from_bytes(&mut reader).unwrap();
+        assert_eq!(header, MessageHeader::from(&request));
+        assert_eq!(request.peers,
+                   vec![Peer {
+                            state: PeerState::Alive,
+                            generation: 1496752869673,
+                            version: 394,
+                            endpoints: vec![Endpoint {
+                                                endpoint_type: EndpointType::Client,
+                                                port: 8647,
+                                                host: "localhost".to_string(),
+                                            },
+                                            Endpoint {
+                                                endpoint_type: EndpointType::Management,
+                                                port: 8648,
+                                                host: "localhost".to_string(),
+                                            },
+                                            Endpoint {
+                                                endpoint_type: EndpointType::Replication,
+                                                port: 8649,
+                                                host: "localhost".to_string(),
+                                            }],
+                            raf_memberships: vec![RaftMembership {
+                                                      partition_id: 0,
+                                                      term: 1,
+                                                      state: RaftMembershipState::Leader,
+                                                      topic_name: "default-topic".to_string(),
+                                                  }],
+                        },
+                        Peer {
+                            state: PeerState::Alive,
+                            generation: 1496752878665,
+                            version: 384,
+                            endpoints: vec![Endpoint {
+                                                endpoint_type: EndpointType::Client,
+                                                port: 9647,
+                                                host: "localhost".to_string(),
+                                            },
+                                            Endpoint {
+                                                endpoint_type: EndpointType::Management,
+                                                port: 9648,
+                                                host: "localhost".to_string(),
+                                            },
+                                            Endpoint {
+                                                endpoint_type: EndpointType::Replication,
+                                                port: 9649,
+                                                host: "localhost".to_string(),
+                                            }],
+                            raf_memberships: vec![RaftMembership {
+                                                      partition_id: 0,
+                                                      term: 1,
+                                                      state: RaftMembershipState::Follower,
+                                                      topic_name: "default-topic".to_string(),
+                                                  }],
+                        }]);
+    }
+
 }
