@@ -20,4 +20,8 @@ pub fn app() -> App<'static, 'static> {
                  .help("Ports to capture")
                  .multiple(true)
                  .default_value("51015"))
+        .arg(Arg::with_name("pretty")
+                 .short("y")
+                 .long("pretty")
+                 .help("Pretty print message body"))
 }

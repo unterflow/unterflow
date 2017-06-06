@@ -40,6 +40,7 @@ fn try_main() -> Result<()> {
 
     let interface = args.value_of("interface").expect("Interface required");
     let ports = values_t!(args, "port", u16)?;
+    let pretty = args.is_present("pretty");
 
     let (_, mut rx) = network::channel_for_interface(interface)?;
 
@@ -56,9 +57,15 @@ fn try_main() -> Result<()> {
         if let Ok(packet) = iter.next() {
             if let Some(packet) = network::capture_packet(&packet) {
                 if !same(&last, &packet) && packet.len() > 0 && packet.has_port(&ports) {
-                    if let Err(e) = protocol::dump_packet(&packet) {
-                        error!("Unable to parse packet {:?}: {}", packet, e);
+                    match protocol::Protocol::parse(&packet) {
+                        Ok(mut protocol) => {
+                            protocol.pretty(pretty);
+                            println!("==>  Packet: {}", packet);
+                            println!("{}", protocol);
+                        }
+                        Err(e) => error!("Unable to parse packet {:?}: {}", packet, e),
                     }
+
                     last = Some(packet);
                 }
             }

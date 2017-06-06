@@ -1,4 +1,5 @@
-use std::io::{Cursor, Read};
+use std::fmt;
+use std::io::Cursor;
 use unterflow_protocol::convert::*;
 use unterflow_protocol::protocol::client::*;
 use unterflow_protocol::protocol::gossip::*;
@@ -8,122 +9,126 @@ use unterflow_protocol::protocol::transport::*;
 use network::CapturedPacket;
 use errors::*;
 
-pub fn dump_packet(packet: &CapturedPacket) -> Result<()> {
-    println!();
-    println!("==>  Packet: {}", packet);
+pub struct Protocol {
+    frame: FrameHeader,
+    transport: Option<TransportHeader>,
+    protocol: Option<Box<fmt::Debug>>,
+    message: Option<Box<fmt::Debug>>,
+    pretty: bool,
+}
 
-    let mut payload = Cursor::new(packet.payload());
+impl fmt::Display for Protocol {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{:?}", self.frame)?;
+        if let Some(ref transport) = self.transport {
+            writeln!(f, "{:?}", transport)?;
+        }
+        if let Some(ref protocol) = self.protocol {
+            writeln!(f, "{:?}", protocol)?;
+        }
+        if let Some(ref message) = self.message {
+            if self.pretty {
+                writeln!(f, "{:#?}", message)?;
+            } else {
+                writeln!(f, "{:?}", message)?;
+            }
+        }
 
-    let frame = FrameHeader::from_bytes(&mut payload)?;
-    println!("{:?}", frame);
-
-    match frame.type_id {
-        FrameType::Message => dump_message(&mut payload),
-        FrameType::Unknown => bail!("Unknown frame type: {:?}", frame),
-        _ => Ok(()),
+        Ok(())
     }
 }
 
-pub fn dump_message(mut payload: &mut Read) -> Result<()> {
-    let transport = TransportHeader::from_bytes(&mut payload)?;
-    println!("{:?}", transport);
-    match transport.protocol_id {
-        TransportProtocol::RequestResponse => {
-            let header = RequestResponseHeader::from_bytes(&mut payload)?;
-            println!("{:?}", header);
+impl Protocol {
+    pub fn pretty(&mut self, pretty: bool) {
+        self.pretty = pretty
+    }
+    pub fn parse(packet: &CapturedPacket) -> Result<Self> {
+        let mut payload = Cursor::new(packet.payload());
+
+        let mut protocol = Protocol {
+            frame: FrameHeader::from_bytes(&mut payload)?,
+            transport: None,
+            protocol: None,
+            message: None,
+            pretty: false,
+        };
+
+        if protocol.frame.type_id == FrameType::Unknown {
+            bail!("Unknown frame type: {:?}", protocol.frame);
         }
-        TransportProtocol::FullDuplexSingleMessage => {
-            let header = SingleMessageHeader::from_bytes(&mut payload)?;
-            println!("{:?}", header);
+
+        if protocol.frame.type_id == FrameType::Message {
+
+            let transport = TransportHeader::from_bytes(&mut payload)?;
+            protocol.protocol = match transport.protocol_id {
+                TransportProtocol::RequestResponse => Some(Box::new(RequestResponseHeader::from_bytes(&mut payload)?)),
+                TransportProtocol::FullDuplexSingleMessage => Some(Box::new(SingleMessageHeader::from_bytes(&mut payload)?)),
+                TransportProtocol::Unknown => bail!("Unknown transport protocol: {:?}", transport),
+            };
+            protocol.transport = Some(transport);
+
+            let header = MessageHeader::from_bytes(&mut payload)?;
+
+            // Client Protocol
+            if header == ErrorResponse::message_header() {
+                protocol.message = Some(Box::new(ErrorResponse::from_bytes(&mut payload)?));
+            } else if header == ControlMessageRequest::message_header() {
+                protocol.message = Some(Box::new(ControlMessageRequest::from_bytes(&mut payload)?));
+            } else if header == ControlMessageResponse::message_header() {
+                protocol.message = Some(Box::new(ControlMessageResponse::from_bytes(&mut payload)?));
+            } else if header == ExecuteCommandRequest::message_header() {
+                protocol.message = Some(Box::new(ExecuteCommandRequest::from_bytes(&mut payload)?));
+            } else if header == ExecuteCommandResponse::message_header() {
+                protocol.message = Some(Box::new(ExecuteCommandResponse::from_bytes(&mut payload)?));
+            } else if header == SubscribedEvent::message_header() {
+                protocol.message = Some(Box::new(SubscribedEvent::from_bytes(&mut payload)?));
+            } else if header == BrokerEventMetadata::message_header() {
+                protocol.message = Some(Box::new(BrokerEventMetadata::from_bytes(&mut payload)?));
+            }
+            // Management Protocol
+            else if header == InvitationRequest::message_header() {
+                protocol.message = Some(Box::new(InvitationRequest::from_bytes(&mut payload)?));
+            } else if header == InvitationResponse::message_header() {
+                protocol.message = Some(Box::new(InvitationResponse::from_bytes(&mut payload)?));
+            }
+            // Raft Protocol
+            else if header == JoinRequest::message_header() {
+                protocol.message = Some(Box::new(JoinRequest::from_bytes(&mut payload)?));
+            } else if header == JoinResponse::message_header() {
+                protocol.message = Some(Box::new(JoinResponse::from_bytes(&mut payload)?));
+            } else if header == LeaveRequest::message_header() {
+                protocol.message = Some(Box::new(LeaveRequest::from_bytes(&mut payload)?));
+            } else if header == LeaveResponse::message_header() {
+                protocol.message = Some(Box::new(LeaveResponse::from_bytes(&mut payload)?));
+            } else if header == ConfigurationRequest::message_header() {
+                protocol.message = Some(Box::new(ConfigurationRequest::from_bytes(&mut payload)?));
+            } else if header == ConfigurationResponse::message_header() {
+                protocol.message = Some(Box::new(ConfigurationResponse::from_bytes(&mut payload)?));
+            } else if header == PollRequest::message_header() {
+                protocol.message = Some(Box::new(PollRequest::from_bytes(&mut payload)?));
+            } else if header == PollResponse::message_header() {
+                protocol.message = Some(Box::new(PollResponse::from_bytes(&mut payload)?));
+            } else if header == VoteRequest::message_header() {
+                protocol.message = Some(Box::new(VoteRequest::from_bytes(&mut payload)?));
+            } else if header == VoteResponse::message_header() {
+                protocol.message = Some(Box::new(VoteResponse::from_bytes(&mut payload)?));
+            } else if header == AppendRequest::message_header() {
+                protocol.message = Some(Box::new(AppendRequest::from_bytes(&mut payload)?));
+            } else if header == AppendResponse::message_header() {
+                protocol.message = Some(Box::new(AppendResponse::from_bytes(&mut payload)?));
+            }
+            // Gossip Protocol
+            else if header == Gossip::message_header() {
+                protocol.message = Some(Box::new(Gossip::from_bytes(&mut payload)?));
+            } else if header == Probe::message_header() {
+                protocol.message = Some(Box::new(Probe::from_bytes(&mut payload)?));
+            } else if header == PeerDescriptor::message_header() {
+                protocol.message = Some(Box::new(PeerDescriptor::from_bytes(&mut payload)?));
+            } else {
+                bail!("Unknown message header: {:?}", header);
+            }
         }
-        TransportProtocol::Unknown => bail!("Unknown transport protocol: {:?}", transport),
-    }
 
-    let header = MessageHeader::from_bytes(&mut payload)?;
-    println!("{:?}", header);
-
-    // Client Protocol
-    if header == ErrorResponse::message_header() {
-        let message = ErrorResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ControlMessageRequest::message_header() {
-        let message = ControlMessageRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ControlMessageResponse::message_header() {
-        let message = ControlMessageResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ExecuteCommandRequest::message_header() {
-        let message = ExecuteCommandRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ExecuteCommandResponse::message_header() {
-        let message = ExecuteCommandResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == SubscribedEvent::message_header() {
-        let message = SubscribedEvent::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == BrokerEventMetadata::message_header() {
-        let message = BrokerEventMetadata::from_bytes(&mut payload)?;
-        println!("{:?}", message);
+        Ok(protocol)
     }
-    // Management Protocol
-    else if header == InvitationRequest::message_header() {
-        let message = InvitationRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == InvitationResponse::message_header() {
-        let message = InvitationResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    }
-    // Raft Protocol
-    else if header == JoinRequest::message_header() {
-        let message = JoinRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == JoinResponse::message_header() {
-        let message = JoinResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == LeaveRequest::message_header() {
-        let message = LeaveRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == LeaveResponse::message_header() {
-        let message = LeaveResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ConfigurationRequest::message_header() {
-        let message = ConfigurationRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == ConfigurationResponse::message_header() {
-        let message = ConfigurationResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == PollRequest::message_header() {
-        let message = PollRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == PollResponse::message_header() {
-        let message = PollResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == VoteRequest::message_header() {
-        let message = VoteRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == VoteResponse::message_header() {
-        let message = VoteResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == AppendRequest::message_header() {
-        let message = AppendRequest::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == AppendResponse::message_header() {
-        let message = AppendResponse::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    }
-    // Gossip Protocol
-    else if header == Gossip::message_header() {
-        let message = Gossip::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == Probe::message_header() {
-        let message = Probe::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else if header == PeerDescriptor::message_header() {
-        let message = PeerDescriptor::from_bytes(&mut payload)?;
-        println!("{:?}", message);
-    } else {
-        bail!("Unknown message header: {:?}", header);
-    }
-
-    Ok(())
 }
