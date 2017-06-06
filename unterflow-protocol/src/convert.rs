@@ -2,6 +2,7 @@ use std::fmt;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use byteorder::{LittleEndian, ReadBytesExt};
 use rmpv::decode::read_value;
+use rmpv::{Value, Utf8String};
 use protocol::transport::MessageHeader;
 use errors::*;
 
@@ -51,7 +52,21 @@ impl fmt::Debug for Data {
             // to distinguish non message pack data which still
             // can be parsed somehow
             if value.is_map() {
-                return write!(f, "{}", value);
+                write!(f, "{}", value)?;
+
+                if let Some(values) = value.as_map() {
+                    let payload_key = Value::String(Utf8String::from("payload"));
+                    let payload = values.iter().find(|&&(ref key, _)| key == &payload_key);
+
+                    if let Some(&(_, Value::Binary(ref bytes))) = payload {
+                        let mut reader = Cursor::new(bytes);
+                        if let Ok(value) = read_value(&mut reader) {
+                            write!(f, ", payload (decoded): {}", value)?;
+                        }
+                    }
+                }
+
+                return Ok(());
             }
         }
 
