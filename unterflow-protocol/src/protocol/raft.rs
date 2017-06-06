@@ -119,7 +119,7 @@ pub struct AppendRequest {
 }
 
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength, Message)]
-#[message(template_id = "10", schema_id = "4", version = "1")]
+#[message(template_id = "11", schema_id = "4", version = "1")]
 pub struct AppendResponse {
     pub partition_id: u16,
     pub term: u16,
