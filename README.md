@@ -8,6 +8,25 @@ Rust implementation of a to be announced protocol
 
 Dump unterflow network traffic.
 
+### Install
+
+Download latest release from [release page](https://github.com/menski/unterflow/releases) or build locally using:
+
+```bash
+$ cargo install --path unterflow-dump
+```
+
+#### Capabilities
+
+To capture network packages `unterflow-dump` requires access to raw sockets.
+Therefor it has to be run with either root privileges, i.e. using `sudo`, or
+it the binary requires the `CAP_NET_RAW` capability;
+
+```bash
+# add CAP_NET_RAW to binary to run it as non-root
+sudo setcap cap_net_raw+ep unterflow-dump
+```
+
 ### Usage
 
 ```bash
@@ -63,3 +82,4 @@ FrameHeader { length: 0, version: 0, flags: 0, type_id: ControlClose, stream_id:
 ==>  Packet: 127.0.0.1:51015 -> 127.0.0.1:51972 (16 bytes; seq: 3339223109)
 FrameHeader { length: 0, version: 0, flags: 0, type_id: ControlEndOfStream, stream_id: 0 }
 ```
+
