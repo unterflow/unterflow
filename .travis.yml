@@ -1,4 +1,10 @@
+# vim: set ts=2 sw=2 tw=2 et :
 language: rust
+
+sudo: required
+
+services:
+  - docker
 
 cache:
   cargo: true
@@ -6,3 +12,19 @@ cache:
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+
+before_deploy:
+  - docker run --rm -it -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder cargo build --verbose --all --release
+  - cp target/x86_64-unknown-linux-musl/release/unterflow-dump unterflow-dump-${TRAVIS_TAG}-linux
+  - sha512sum unterflow-dump-${TRAVIS_TAG}-linux > unterflow-dump-${TRAVIS_TAG}-linux.sha512
+
+deploy:
+  provider: releases
+  api_key:
+    secure: Jdlkl7KqgAUYN9Hfgyhm7ZmYdpLwF4QHUKFhBJfE3VpS6lE7nfcypjOTRPJdFwF3gko2AxEyZF5ztUeLGx9+EbRkwlSgvfOD8AAT0geATzCb/Ki4kGwLUyVtGYUTHBmw76FWCIfKh9MjIoH486J1gVbp/4U6GZmzxjjt7ZbFm4+WDuQtQ2fdyfJO/yNq9DXtUBvlCY1SaGSQyUTMU5WDE5vu5l7aYIhOBXB83v1yx2aVLpkrOeBjZjU5hl4QHzu5EUdTuXx8/RDBkpjDPbZPosVupC73ZluP77FC2tal7R3aR8EtEegQri0CIVQp3wiDfaEzy4jYA+GxG8XRo9Yx7SsXgTkH/89oSbersTWubXuyaKyai6lcRb7AvmXNNnmW0HRuJMe1433U6FzjwxuD8lBf63okFYbUC1rhJExATmAvefBoWd6sDK45sqzM1jKc9Bq+oVYMHnP9YQsf02LODwdpo0oRXTX/u23v1VCBfdy29foIoom35GjGoOaNZ4+t3+04xYiArTaoX2jIiaU21HmxEtTFNKnXIPP7XkU1jAEW43xdHnZvFr1dGJiXYj40OqH/0lfTW6RF6dT2a+gYGon/foDLrE9CbYFteZRZDcgtyo6Tufaa1VOWBJgXGfQbQ3GmTjLwbVSf6v3Hd75px78Q/YiRp66KM2mexHv35ac=
+  file:
+    - unterflow-dump-${TRAVIS_TAG}-linux
+    - unterflow-dump-${TRAVIS_TAG}-linux.sha512
+  skip_cleanup: true
+  on:
+    tags: true
