@@ -1,4 +1,7 @@
 # unterflow
+
+[![Build Status](https://travis-ci.org/menski/unterflow.svg?branch=master)](https://travis-ci.org/menski/unterflow)
+
 Rust implementation of a to be announced protocol
 
 ## unterflow-dump
