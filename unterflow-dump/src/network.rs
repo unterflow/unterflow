@@ -23,8 +23,8 @@ impl CapturedPacket {
         self.payload.len()
     }
 
-    pub fn has_port(&self, port: u16) -> bool {
-        self.source.port == port || self.target.port == port
+    pub fn has_port(&self, ports: &[u16]) -> bool {
+        ports.contains(&self.source.port) || ports.contains(&self.target.port)
     }
 
     pub fn payload(&self) -> Vec<u8> {

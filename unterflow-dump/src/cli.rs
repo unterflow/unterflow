@@ -17,6 +17,7 @@ pub fn app() -> App<'static, 'static> {
         .arg(Arg::with_name("port")
                  .short("p")
                  .long("port")
-                 .help("Port to capture")
+                 .help("Ports to capture")
+                 .multiple(true)
                  .default_value("51015"))
 }

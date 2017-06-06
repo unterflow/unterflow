@@ -39,7 +39,7 @@ fn try_main() -> Result<()> {
     loggerv::init_with_verbosity(args.occurrences_of("v"))?;
 
     let interface = args.value_of("interface").expect("Interface required");
-    let port = value_t!(args, "port", u16)?;
+    let ports = values_t!(args, "port", u16)?;
 
     let (_, mut rx) = network::channel_for_interface(interface)?;
 
@@ -55,7 +55,7 @@ fn try_main() -> Result<()> {
     loop {
         if let Ok(packet) = iter.next() {
             if let Some(packet) = network::capture_packet(&packet) {
-                if !same(&last, &packet) && packet.len() > 0 && packet.has_port(port) {
+                if !same(&last, &packet) && packet.len() > 0 && packet.has_port(&ports) {
                     if let Err(e) = protocol::dump_packet(&packet) {
                         error!("Unable to parse packet {:?}: {}", packet, e);
                     }
