@@ -19,8 +19,8 @@ $ cargo install --path unterflow-dump
 #### Capabilities
 
 To capture network packages `unterflow-dump` requires access to raw sockets.
-Therefor it has to be run with either root privileges, i.e. using `sudo`, or
-it the binary requires the `CAP_NET_RAW` capability;
+Therefore it has to be run with either root privileges, i.e. using `sudo`, or
+the binary requires the `CAP_NET_RAW` capability;
 
 ```bash
 # add CAP_NET_RAW to binary to run it as non-root
