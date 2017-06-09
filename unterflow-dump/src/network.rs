@@ -56,14 +56,27 @@ impl fmt::Display for Host {
     }
 }
 
+pub fn list_interfaces() {
+    for interface in datalink::interfaces() {
+        println!("{}", interface.name);
+        debug!("{:?}", interface);
+    }
+}
 
-pub fn channel_for_interface(name: &str) -> Result<(Box<EthernetDataLinkSender>, Box<EthernetDataLinkReceiver>)> {
-    debug!("Opening channel for interface: {}", name);
+pub fn channel_for_interface(name: Option<&str>) -> Result<(Box<EthernetDataLinkSender>, Box<EthernetDataLinkReceiver>)> {
+    let interface = if let Some(name) = name {
+        datalink::interfaces().into_iter()
+            .find(|interface| interface.name == *name)
+            .ok_or_else(|| format!("Unable to find interface for name: {}", name))?
+    }
+    else {
+        info!("No interface specified. Selecting first interface found.");
+        datalink::interfaces().into_iter().next()
+            .ok_or_else(|| "Unable to find any interface")?
+    };
 
-    let interface = datalink::interfaces()
-        .into_iter()
-        .find(|interface| interface.name == *name)
-        .ok_or_else(|| format!("Unable to find interface for name: {}", name))?;
+    info!("Opening channel for interface: {}", interface.name);
+    debug!("{:?}", interface);
 
     match datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => Ok((tx, rx)),

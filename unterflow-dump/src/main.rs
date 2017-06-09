@@ -36,14 +36,21 @@ fn main() {
 fn try_main() -> Result<()> {
     let args = cli::app().get_matches();
 
-    loggerv::init_with_verbosity(args.occurrences_of("v"))?;
+    loggerv::init_with_verbosity(args.occurrences_of("v") + 1)?;
 
-    let interface = args.value_of("interface").expect("Interface required");
-    let ports = values_t!(args, "port", u16)?;
-    let pretty = args.is_present("pretty");
+    if args.is_present("list-interfaces") {
+        info!("Listing network interfaces");
+        network::list_interfaces();
+        return Ok(());
+    }
 
+    let interface = args.value_of("interface");
     let (_, mut rx) = network::channel_for_interface(interface)?;
 
+    let ports = values_t!(args, "port", u16)?;
+    info!("Capturing TCP ports: {:?}", ports);
+
+    let pretty = args.is_present("pretty");
 
     let mut last = None;
     let mut iter = rx.iter();

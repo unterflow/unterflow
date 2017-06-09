@@ -11,8 +11,7 @@ pub fn app() -> App<'static, 'static> {
         .arg(Arg::with_name("interface")
                  .short("i")
                  .long("interface")
-                 .help("Interface to capture")
-                 .required(true)
+                 .help("Interface to capture (if non is specified the first one found will be used)")
                  .takes_value(true))
         .arg(Arg::with_name("port")
                  .short("p")
@@ -24,4 +23,8 @@ pub fn app() -> App<'static, 'static> {
                  .short("y")
                  .long("pretty")
                  .help("Pretty print message body"))
+        .arg(Arg::with_name("list-interfaces")
+                 .short("l")
+                 .long("list-interfaces")
+                 .help("List all interfaces and exists"))
 }
