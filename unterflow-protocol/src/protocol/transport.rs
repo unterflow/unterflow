@@ -1,6 +1,10 @@
 use convert::*;
 use errors::*;
 
+macro_rules! align {
+    ($value:expr, $alignment:expr) => { ($value + ($alignment - 1)) & !($alignment - 1) }
+}
+
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct FrameHeader {
     pub length: u32,
@@ -8,6 +12,12 @@ pub struct FrameHeader {
     pub flags: u8,
     pub type_id: FrameType,
     pub stream_id: u32,
+}
+
+impl FrameHeader {
+    pub fn message_length(&self) -> usize {
+        align!(self.length as usize + Self::block_length() as usize, 8)
+    }
 }
 
 #[derive(Debug, PartialEq, EnumDefault, FromBytes, BlockLength)]

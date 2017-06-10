@@ -8,6 +8,7 @@ use pnet::packet::ipv4::Ipv4Packet;
 use pnet::packet::ipv6::Ipv6Packet;
 use pnet::packet::tcp::TcpPacket;
 use std::fmt;
+use std::io::Cursor;
 use std::net::IpAddr;
 
 #[derive(Debug, PartialEq)]
@@ -27,8 +28,8 @@ impl CapturedPacket {
         ports.contains(&self.source.port) || ports.contains(&self.target.port)
     }
 
-    pub fn payload(&self) -> Vec<u8> {
-        self.payload.clone()
+    pub fn payload(&self) -> Cursor<&Vec<u8>> {
+        Cursor::new(&self.payload)
     }
 }
 

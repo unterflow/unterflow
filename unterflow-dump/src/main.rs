@@ -64,13 +64,27 @@ fn try_main() -> Result<()> {
         if let Ok(packet) = iter.next() {
             if let Some(packet) = network::capture_packet(&packet) {
                 if !same(&last, &packet) && packet.len() > 0 && packet.has_port(&ports) {
-                    match protocol::Protocol::parse(&packet) {
-                        Ok(mut protocol) => {
-                            protocol.pretty(pretty);
-                            println!("==>  Packet: {}", packet);
-                            println!("{}", protocol);
+                    let mut read_bytes = 0;
+                    while read_bytes < packet.len() {
+                        let mut payload = packet.payload();
+                        match protocol::Protocol::parse(&mut payload, read_bytes as u64, pretty) {
+                            Ok(protocol) => {
+                                match protocol.frame {
+                                    Some(ref frame) => {
+                                        read_bytes += frame.message_length();
+                                        println!("==>  Packet: {}", packet);
+                                        println!("{}", protocol);
+                                    }
+                                    None => {
+                                        warn!("Expected more bytes in packet: {} < {}. Skipping remaining bytes.",
+                                              read_bytes,
+                                              packet.len());
+                                        break;
+                                    }
+                                }
+                            }
+                            Err(e) => error!("Unable to parse packet {:?}: {}", packet, e),
                         }
-                        Err(e) => error!("Unable to parse packet {:?}: {}", packet, e),
                     }
 
                     last = Some(packet);
