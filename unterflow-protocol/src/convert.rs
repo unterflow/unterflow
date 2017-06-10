@@ -1,10 +1,10 @@
+use byteorder::{LittleEndian, ReadBytesExt};
+use errors::*;
+use protocol::transport::MessageHeader;
+use rmpv::{Utf8String, Value};
+use rmpv::decode::read_value;
 use std::fmt;
 use std::io::{Cursor, Read, Seek, SeekFrom};
-use byteorder::{LittleEndian, ReadBytesExt};
-use rmpv::decode::read_value;
-use rmpv::{Value, Utf8String};
-use protocol::transport::MessageHeader;
-use errors::*;
 
 pub trait FromBytes: Sized {
     fn from_bytes(reader: &mut Read) -> Result<Self>;
@@ -304,8 +304,8 @@ mod tests {
             baz: String,
         }
 
-        let mut bytes: &[u8] = &[12, 0, 2, 0, 3, 1, 0, 3, 0, 102, 111, 111, 2, 0, 3, 0, 98, 97,
-                                 114, 3, 0, 3, 0, 98, 97, 122, 3, 0, 1, 2, 3];
+        let mut bytes: &[u8] = &[12, 0, 2, 0, 3, 1, 0, 3, 0, 102, 111, 111, 2, 0, 3, 0, 98, 97, 114, 3, 0, 3, 0, 98,
+                                 97, 122, 3, 0, 1, 2, 3];
         let foo = Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(foo,

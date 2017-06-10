@@ -1,14 +1,14 @@
-use std::fmt;
-use std::net::IpAddr;
+use errors::*;
 use pnet::datalink::{self, EthernetDataLinkReceiver, EthernetDataLinkSender};
 use pnet::datalink::Channel::Ethernet;
+use pnet::packet::Packet;
 use pnet::packet::ethernet::{EtherTypes, EthernetPacket};
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
 use pnet::packet::ipv4::Ipv4Packet;
 use pnet::packet::ipv6::Ipv6Packet;
 use pnet::packet::tcp::TcpPacket;
-use pnet::packet::Packet;
-use errors::*;
+use std::fmt;
+use std::net::IpAddr;
 
 #[derive(Debug, PartialEq)]
 pub struct CapturedPacket {
@@ -63,15 +63,18 @@ pub fn list_interfaces() {
     }
 }
 
-pub fn channel_for_interface(name: Option<&str>) -> Result<(Box<EthernetDataLinkSender>, Box<EthernetDataLinkReceiver>)> {
+pub fn channel_for_interface(name: Option<&str>)
+                             -> Result<(Box<EthernetDataLinkSender>, Box<EthernetDataLinkReceiver>)> {
     let interface = if let Some(name) = name {
-        datalink::interfaces().into_iter()
+        datalink::interfaces()
+            .into_iter()
             .find(|interface| interface.name == *name)
             .ok_or_else(|| format!("Unable to find interface for name: {}", name))?
-    }
-    else {
+    } else {
         info!("No interface specified. Selecting first interface found.");
-        datalink::interfaces().into_iter().next()
+        datalink::interfaces()
+            .into_iter()
+            .next()
             .ok_or_else(|| "Unable to find any interface")?
     };
 
@@ -117,7 +120,11 @@ fn capture_ipv6_packet(packet: &EthernetPacket) -> Option<CapturedPacket> {
     }
 }
 
-fn capture_transport_packet(protocol: IpNextHeaderProtocol, source: IpAddr, destination: IpAddr, packet: &[u8]) -> Option<CapturedPacket> {
+fn capture_transport_packet(protocol: IpNextHeaderProtocol,
+                            source: IpAddr,
+                            destination: IpAddr,
+                            packet: &[u8])
+                            -> Option<CapturedPacket> {
     match protocol {
         IpNextHeaderProtocols::Tcp => capture_tcp_packet(source, destination, packet),
         _ => None,

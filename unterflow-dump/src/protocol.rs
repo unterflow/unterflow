@@ -1,3 +1,5 @@
+use errors::*;
+use network::CapturedPacket;
 use std::fmt;
 use std::io::Cursor;
 use unterflow_protocol::convert::*;
@@ -6,8 +8,6 @@ use unterflow_protocol::protocol::gossip::*;
 use unterflow_protocol::protocol::management::*;
 use unterflow_protocol::protocol::raft::*;
 use unterflow_protocol::protocol::transport::*;
-use network::CapturedPacket;
-use errors::*;
 
 pub struct Protocol {
     frame: FrameHeader,
@@ -62,7 +62,9 @@ impl Protocol {
             let transport = TransportHeader::from_bytes(&mut payload)?;
             protocol.protocol = match transport.protocol_id {
                 TransportProtocol::RequestResponse => Some(Box::new(RequestResponseHeader::from_bytes(&mut payload)?)),
-                TransportProtocol::FullDuplexSingleMessage => Some(Box::new(SingleMessageHeader::from_bytes(&mut payload)?)),
+                TransportProtocol::FullDuplexSingleMessage => {
+                    Some(Box::new(SingleMessageHeader::from_bytes(&mut payload)?))
+                }
                 TransportProtocol::Unknown => bail!("Unknown transport protocol: {:?}", transport),
             };
             protocol.transport = Some(transport);
