@@ -1,6 +1,7 @@
 # unterflow
 
 [![Build Status](https://travis-ci.org/menski/unterflow.svg?branch=master)](https://travis-ci.org/menski/unterflow)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/menski/unterflow?branch=master&svg=true)](https://ci.appveyor.com/project/menski/unterflow)
 
 Rust implementation of a to be announced protocol
 
