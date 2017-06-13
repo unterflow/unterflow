@@ -108,17 +108,17 @@ mod tests {
         cursor!(reader, "create-task-request");
 
         let header = FrameHeader::from_bytes(&mut reader).unwrap();
-        assert_eq!(header.length, 147);
+        assert_eq!(header.length, 129);
         assert_eq!(header.version, 0);
         assert_eq!(header.flags, 0);
         assert_eq!(header.type_id, FrameType::Message);
-        assert_eq!(header.stream_id, 2);
+        assert_eq!(header.stream_id, 3);
 
         let header = TransportHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.protocol_id, TransportProtocol::RequestResponse);
 
         let header = RequestResponseHeader::from_bytes(&mut reader).unwrap();
-        assert_eq!(header.connection_id, 1);
+        assert_eq!(header.connection_id, 2);
         assert_eq!(header.request_id, 0);
     }
 
@@ -131,13 +131,13 @@ mod tests {
         assert_eq!(header.version, 0);
         assert_eq!(header.flags, 0);
         assert_eq!(header.type_id, FrameType::Message);
-        assert_eq!(header.stream_id, 2);
+        assert_eq!(header.stream_id, 3);
 
         let header = TransportHeader::from_bytes(&mut reader).unwrap();
         assert_eq!(header.protocol_id, TransportProtocol::RequestResponse);
 
         let header = RequestResponseHeader::from_bytes(&mut reader).unwrap();
-        assert_eq!(header.connection_id, 1);
+        assert_eq!(header.connection_id, 2);
         assert_eq!(header.request_id, 0);
     }
 
