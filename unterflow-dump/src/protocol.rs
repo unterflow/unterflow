@@ -13,6 +13,7 @@ pub struct Protocol {
     pub frame: Option<FrameHeader>,
     transport: Option<TransportHeader>,
     protocol: Option<Box<fmt::Debug>>,
+    header: Option<MessageHeader>,
     message: Option<Box<fmt::Debug>>,
     pretty: bool,
 }
@@ -27,6 +28,9 @@ impl fmt::Display for Protocol {
         }
         if let Some(ref protocol) = self.protocol {
             writeln!(f, "{:?}", protocol)?;
+        }
+        if let Some(ref header) = self.header {
+            writeln!(f, "{:?}", header)?;
         }
         if let Some(ref message) = self.message {
             if self.pretty {
@@ -126,6 +130,8 @@ impl Protocol {
                 } else {
                     bail!("Unknown message header: {:?}", header);
                 }
+
+                protocol.header = Some(header);
             }
 
             protocol.frame = Some(frame);
