@@ -29,7 +29,7 @@ pub trait ToMessageHeader {
 }
 
 #[derive(PartialEq, Default)]
-pub struct Data(Vec<u8>);
+pub struct Data(pub Vec<u8>);
 
 impl ::std::ops::Deref for Data {
     type Target = Vec<u8>;
