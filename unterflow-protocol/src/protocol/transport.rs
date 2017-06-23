@@ -1,10 +1,6 @@
 use convert::*;
 use errors::*;
 
-macro_rules! align {
-    ($value:expr, $alignment:expr) => { ($value + ($alignment - 1)) & !($alignment - 1) }
-}
-
 #[derive(Debug, PartialEq, Default, FromBytes, BlockLength)]
 pub struct FrameHeader {
     pub length: u32,

@@ -3,4 +3,5 @@ members = [
     "unterflow-derive",
     "unterflow-dump",
     "unterflow-protocol",
+    "unterflow-view",
 ]
