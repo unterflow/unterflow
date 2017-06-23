@@ -7,7 +7,7 @@ use std::fmt;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 
 pub trait FromBytes: Sized {
-    fn from_bytes(reader: &mut Read) -> Result<Self>;
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self>;
 }
 
 pub trait BlockLength {
@@ -76,55 +76,55 @@ impl fmt::Debug for Data {
 }
 
 impl FromBytes for u8 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_u8()?)
     }
 }
 
 impl FromBytes for i8 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_i8()?)
     }
 }
 
 impl FromBytes for u16 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_u16::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for i16 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_i16::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for u32 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_u32::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for i32 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_i32::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for u64 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_u64::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for i64 {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(reader.read_i64::<LittleEndian>()?)
     }
 }
 
 impl FromBytes for Data {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         let length = reader.read_u16::<LittleEndian>()?;
         let mut buffer = Vec::with_capacity(length as usize);
         let mut handle = reader.take(length as u64);
@@ -134,14 +134,14 @@ impl FromBytes for Data {
 }
 
 impl FromBytes for String {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         let buffer: Data = FromBytes::from_bytes(reader)?;
         Ok(String::from_utf8(buffer.to_vec())?)
     }
 }
 
 impl<T: FromBytes> FromBytes for Vec<T> {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         let _block_length = reader.read_u16::<LittleEndian>()?;
         let num_in_group = reader.read_u8()?;
         let mut group: Vec<T> = Vec::with_capacity(num_in_group as usize);
@@ -153,7 +153,7 @@ impl<T: FromBytes> FromBytes for Vec<T> {
 }
 
 impl FromBytes for bool {
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         match reader.read_u8()? {
             0 => Ok(false),
             1 => Ok(true),
@@ -189,6 +189,7 @@ impl_block_length!(bool);
 mod tests {
 
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn test_derive_from_bytes_struct() {
@@ -202,7 +203,7 @@ mod tests {
             f: String,
         }
 
-        let mut bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 1, 3, 0, 8, 9, 10, 4, 0, 97, 98, 99, 100];
+        let mut bytes = Cursor::new([1, 2, 3, 4, 5, 6, 7, 1, 3, 0, 8, 9, 10, 4, 0, 97, 98, 99, 100]);
         let foo = Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(foo.a, 1);
@@ -224,7 +225,7 @@ mod tests {
             Unknown,
         }
 
-        let mut bytes: &[u8] = &[0, 1, 100, 122, 233];
+        let mut bytes = Cursor::new([0, 1, 100, 122, 233]);
         let mut next = || Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(next(), Foo::A);
@@ -244,7 +245,7 @@ mod tests {
             Unknown,
         }
 
-        let mut bytes: &[u8] = &[0, 0, 0, 0, 4, 3, 2, 1, 1, 0, 0, 0];
+        let mut bytes = Cursor::new([0, 0, 0, 0, 4, 3, 2, 1, 1, 0, 0, 0]);
         let mut next = || Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(next(), Foo::A);
@@ -275,7 +276,7 @@ mod tests {
         }
 
 
-        let mut bytes: &[u8] = &[12, 0, 1, 0, 2, 0];
+        let mut bytes = Cursor::new([12, 0, 1, 0, 2, 0]);
         let foo = Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(foo,
@@ -304,8 +305,8 @@ mod tests {
             baz: String,
         }
 
-        let mut bytes: &[u8] = &[12, 0, 2, 0, 3, 1, 0, 3, 0, 102, 111, 111, 2, 0, 3, 0, 98, 97, 114, 3, 0, 3, 0, 98,
-                                 97, 122, 3, 0, 1, 2, 3];
+        let mut bytes = Cursor::new([12, 0, 2, 0, 3, 1, 0, 3, 0, 102, 111, 111, 2, 0, 3, 0, 98, 97, 114, 3, 0, 3, 0, 98,
+                                 97, 122, 3, 0, 1, 2, 3]);
         let foo = Foo::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(foo,

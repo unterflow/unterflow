@@ -1,6 +1,6 @@
 use convert::*;
 use errors::*;
-use std::io::{Read, Cursor, SeekFrom};
+use std::io::{Read, Seek};
 
 const BLOCK_SIZE: u16 = 4096;
 const CACHE_LINE_LENGTH: u16 = 64;
@@ -24,13 +24,11 @@ impl BlockLength for FsLogSegment {
 
 impl FromBytes for FsLogSegment {
 
-    fn from_bytes(reader: &mut Read) -> Result<Self> {
+    fn from_bytes<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         let id = FromBytes::from_bytes(reader)?;
         let version = FromBytes::from_bytes(reader)?;
-
         let capacity = FromBytes::from_bytes(reader)?;
-
-        let size = 0;
+        let size = FromBytes::from_bytes(reader)?;;
 
         Ok(FsLogSegment {
             id,
