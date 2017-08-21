@@ -1,6 +1,4 @@
 [workspace]
 members = [
-    "unterflow-derive",
     "unterflow-dump",
-    "unterflow-protocol",
 ]
