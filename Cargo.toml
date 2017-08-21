@@ -1,4 +1,12 @@
-[workspace]
-members = [
-    "unterflow-dump",
-]
+[package]
+authors = ["Sebastian Menski <sebastian@menski.org>"]
+name = "unterflow"
+version = "0.1.0"
+
+[dependencies]
+log = "0.3.8"
+loggerv = "0.3.0"
+
+[dependencies.unterflow-protocol]
+git = "https://github.com/unterflow/unterflow-protocol"
+optional = false
