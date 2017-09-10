@@ -75,8 +75,8 @@ impl Client {
         let message = ExecuteCommandRequest {
             topic_name: topic.into(),
             partition_id: 0,
-            position: 0,
-            key: 0,
+            position: u64::max_value(),
+            key: u64::max_value(),
             event_type: EventType::TaskEvent,
             command,
         };
@@ -88,8 +88,12 @@ impl Client {
                 if let RequestResponseMessage::ExecuteCommandResponse(ref message) =
                     *response.message()
                 {
+                    let key = message.key;
                     let task = TaskEvent::from_data(message).expect("Failed to read task");
-                    Ok(Task { state: task.state })
+                    Ok(Task {
+                        state: task.state,
+                        key,
+                    })
                 } else {
                     Err(other(format!(
                         "Unexpected response message {:?}",
@@ -107,7 +111,7 @@ impl Client {
 
     pub fn new_task(&self, task_type: String) -> TaskBuilder {
         TaskBuilder {
-            client: &self,
+            client: self,
             task_type,
             retires: 3,
             header: HashMap::new(),
@@ -159,8 +163,8 @@ fn other(message: String) -> io::Error {
 
 #[derive(Debug)]
 pub struct Topology {
-    topic_leaders: HashMap<String, HashMap<u16, Broker>>,
-    brokers: Vec<Broker>,
+    pub topic_leaders: HashMap<String, HashMap<u16, Broker>>,
+    pub brokers: Vec<Broker>,
 }
 
 impl From<TopologyResponse> for Topology {
@@ -171,7 +175,7 @@ impl From<TopologyResponse> for Topology {
             topic_leaders
                 .entry(leader.topic_name.clone())
                 .or_insert_with(HashMap::new)
-                .insert(leader.port, leader.into());
+                .insert(leader.partition_id, leader.into());
         }
 
         let brokers = response.brokers.into_iter().map(|b| b.into()).collect();
@@ -184,8 +188,8 @@ impl From<TopologyResponse> for Topology {
 
 #[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 pub struct Broker {
-    host: String,
-    port: u16,
+    pub host: String,
+    pub port: u16,
 }
 
 impl From<SocketAddress> for Broker {
@@ -209,4 +213,5 @@ impl From<TopicLeader> for Broker {
 #[derive(Debug)]
 pub struct Task {
     pub state: String,
+    pub key: u64,
 }

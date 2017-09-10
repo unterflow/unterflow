@@ -1,3 +1,8 @@
+sudo: required
+
+services:
+  - docker
+
 language: rust
 
 cache: cargo
@@ -10,3 +15,14 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
+
+before_script:
+  - docker run -d -p 51015:51015 --name zeebe camunda/zeebe:latest
+
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+
+
+after_script:
+  - docker rm -f -v zeebe
