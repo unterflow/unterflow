@@ -22,8 +22,25 @@ fn topology(b: &mut Bencher) {
 
     b.iter(|| {
         let futures: Vec<_> = (0..REQUESTS).map(|_| client.topology()).collect();
-        let results = core.run(future::join_all(futures)).unwrap().len();
-        assert_eq!(REQUESTS, results)
+        core.run(future::join_all(futures)).unwrap();
+    });
+}
+
+#[bench]
+fn task(b: &mut Bencher) {
+    let mut core = Core::new().unwrap();
+    let client = client(&mut core);
+
+    let topic = "default-topic";
+    let task = client.new_task("foo".to_string()).retires(12).add_header(
+        "foo".to_string(),
+        "bar".to_string(),
+    );
+
+
+    b.iter(|| {
+        let futures: Vec<_> = (0..REQUESTS).map(|_| task.create(topic)).collect();
+        core.run(future::join_all(futures)).unwrap();
     });
 }
 
